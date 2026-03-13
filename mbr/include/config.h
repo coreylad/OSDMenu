@@ -40,6 +40,7 @@ typedef struct {
   launchPath *paths; // Launch paths
   int8_t osdLanguage;
   int8_t osdScreenType;
+  int8_t osdVideoOutput;
 } Settings;
 
 // Stores MBR settings

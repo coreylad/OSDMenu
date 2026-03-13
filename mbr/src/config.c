@@ -25,6 +25,7 @@ int loadConfig() {
   settings.paths = NULL;
   settings.osdLanguage = -1;
   settings.osdScreenType = -1;
+  settings.osdVideoOutput = -1;
 
   // Mount the config partition
   if (mountPFS(HOSD_CONF_PARTITION))
@@ -189,6 +190,13 @@ int loadConfig() {
         settings.osdScreenType = TV_SCREEN_169;
       else if (!strcmp(valuePtr, "full"))
         settings.osdScreenType = TV_SCREEN_FULL;
+      continue;
+    }
+    if (!strncmp(lineBuffer, "osd_videooutput", 15)) {
+      if (!strcmp(valuePtr, "rgb"))
+        settings.osdVideoOutput = 0;
+      else if (!strcmp(valuePtr, "ycbcr"))
+        settings.osdVideoOutput = 1;
       continue;
     }
     if (!strncmp(lineBuffer, "osd_language", 12)) {

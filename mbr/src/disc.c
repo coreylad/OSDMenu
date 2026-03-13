@@ -386,6 +386,11 @@ void initializeOSDConfig() {
     cnf->ps2OldLanguage = (settings.osdLanguage == LANGUAGE_JAPANESE) ? settings.osdLanguage : LANGUAGE_ENGLISH;
     cnf->ps2NewLanguage = settings.osdLanguage;
   }
+  if ((settings.osdVideoOutput >= 0) && (settings.osdVideoOutput != cnf->ps2VideoOutput)) {
+    DPRINTF("Changing video output to %d\n", settings.osdVideoOutput);
+    isUpdated = 1;
+    cnf->ps2VideoOutput = settings.osdVideoOutput;
+  }
 
   if (isUpdated) {
     // Update NVRAM config
