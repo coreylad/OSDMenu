@@ -121,7 +121,7 @@ function(pack_elf target_name unpacked_target)
     )
 endfunction()
 
-# Create KELF with utils/sign.py
+# Create KELF with utils/kelfsign.py
 function(create_kelf target_name packed_elf kelf_type)
     get_target_property(target_dir ${target_name} BINARY_DIR)
     get_target_property(target_name_base ${target_name} OUTPUT_NAME)
@@ -129,18 +129,19 @@ function(create_kelf target_name packed_elf kelf_type)
         set(target_name_base "${target_name}")
     endif()
 
-    if(NOT DEFINED ENV{KELFSERVER_API_ADDRESS})
-        message(FATAL_ERROR "KELFSERVER_API_ADDRESS environment variable is not set. Please set it before building KELF files.")
-    endif()
-    if(NOT DEFINED ENV{KELFSERVER_API_KEY})
-        message(FATAL_ERROR "KELFSERVER_API_KEY environment variable is not set. Please set it before building KELF files.")
-    endif()
-
     add_custom_command(
         TARGET ${target_name} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E env
-            KELFSERVER_API_ADDRESS=$ENV{KELFSERVER_API_ADDRESS}
-            KELFSERVER_API_KEY=$ENV{KELFSERVER_API_KEY}
+            MG_SIG_MASTER_KEY=$ENV{MG_SIG_MASTER_KEY}
+            MG_SIG_HASH_KEY=$ENV{MG_SIG_HASH_KEY}
+            MG_KBIT_MASTER_KEY=$ENV{MG_KBIT_MASTER_KEY}
+            MG_KBIT_IV=$ENV{MG_KBIT_IV}
+            MG_KC_MASTER_KEY=$ENV{MG_KC_MASTER_KEY}
+            MG_KC_IV=$ENV{MG_KC_IV}
+            MG_ROOTSIG_MASTER_KEY=$ENV{MG_ROOTSIG_MASTER_KEY}
+            MG_ROOTSIG_HASH_KEY=$ENV{MG_ROOTSIG_HASH_KEY}
+            MG_CONTENT_TABLE_IV=$ENV{MG_CONTENT_TABLE_IV}
+            MG_CONTENT_IV=$ENV{MG_CONTENT_IV}
             ${PYTHON3} "${CMAKE_SOURCE_DIR}/utils/scripts/kelfsign.py" "${kelf_type}" "${packed_elf}" "${kelf_file}"
         COMMENT "Creating KELF ${kelf_file} from ${packed_elf}"
         VERBATIM

@@ -1,48 +1,58 @@
 import os
 import sys
-import http.client
-import urllib.parse
+import subprocess
 
-# Check for environment variables and arguments
-if 'KELFSERVER_API_KEY' not in os.environ:
-  print('Failed to encrypt: KELFSERVER_API_KEY is not set')
-  sys.exit(1)
+REQUIRED_KEYS = [
+    'MG_SIG_MASTER_KEY',
+    'MG_SIG_HASH_KEY',
+    'MG_KBIT_MASTER_KEY',
+    'MG_KBIT_IV',
+    'MG_KC_MASTER_KEY',
+    'MG_KC_IV',
+    'MG_ROOTSIG_MASTER_KEY',
+    'MG_ROOTSIG_HASH_KEY',
+    'MG_CONTENT_TABLE_IV',
+    'MG_CONTENT_IV',
+]
 
-if 'KELFSERVER_API_ADDRESS' not in os.environ:
-  print('Failed to encrypt: KELFSERVER_API_ADDRESS is not set')
-  sys.exit(1)
+# Load keys from PS2KEYS.dat, filling in any keys not already in the environment
+keys_file = os.path.join(os.path.dirname(__file__), 'PS2KEYS.dat')
+if os.path.exists(keys_file):
+    with open(keys_file) as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith('#'):
+                continue
+            if '=' in line:
+                key, _, value = line.partition('=')
+                key = key.strip()
+                value = value.strip()
+                if key and key not in os.environ:
+                    os.environ[key] = value
+
+for key in REQUIRED_KEYS:
+    if key not in os.environ:
+        print(f'Failed to encrypt: {key} is not set (set via environment or utils/scripts/PS2KEYS.dat)')
+        sys.exit(1)
 
 if len(sys.argv) != 4:
     print('Failed to encrypt: invalid number of arguments')
-    print('Usage: python3 script.py <header_id> <input_file> <output_file>')
+    print('Usage: python3 kelfsign.py <header_id> <input_file> <output_file>')
     sys.exit(1)
 
 header_id = sys.argv[1]
-input_file_name = sys.argv[2]
-output_file_name = sys.argv[3]
+input_file = sys.argv[2]
+output_file = sys.argv[3]
 
-payload = open(input_file_name, 'rb').read()
+kelftool = os.environ.get('KELFTOOL', 'kelftool')
 
-# parse URL
-url = urllib.parse.urlparse(os.environ['KELFSERVER_API_ADDRESS'] + '/encrypt?headerid={}'.format(header_id))
+result = subprocess.run(
+    [kelftool, 'encrypt', header_id, input_file, output_file],
+    env=os.environ,
+)
 
-# Create HTTPS connection
-conn = http.client.HTTPSConnection(url.netloc)
-
-# Call KELFServer API
-headers = {
-    'X-Api-Key': os.environ['KELFSERVER_API_KEY'],
-    'Content-Type': 'application/octet-stream',
-}
-conn.request('POST', url.path + '?' + url.query, body=payload, headers=headers)
-
-response = conn.getresponse()
-
-if response.status != 200:
-    print('Failed to encrypt: HTTP {}'.format(response.status))
+if result.returncode != 0:
+    print(f'Failed to encrypt: kelftool exited with {result.returncode}')
     sys.exit(1)
-
-# write the response body to output file
-open(output_file_name, 'wb').write(response.read())
 
 print('File encrypted successfully')

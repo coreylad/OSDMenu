@@ -153,13 +153,21 @@ add_custom_command(
     COMMENT "Creating binary from ELF"
 )
 
-# Build KELF if required environment variables are set
-if(DEFINED ENV{KELFSERVER_API_ADDRESS} AND DEFINED ENV{KELFSERVER_API_KEY})
+# Build KELF if MG key environment variables are set or PS2KEYS.dat exists
+if(DEFINED ENV{MG_SIG_MASTER_KEY} OR EXISTS "${CMAKE_SOURCE_DIR}/utils/scripts/PS2KEYS.dat")
     add_custom_command(
         TARGET osdmbr POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E env
-            KELFSERVER_API_ADDRESS=$ENV{KELFSERVER_API_ADDRESS}
-            KELFSERVER_API_KEY=$ENV{KELFSERVER_API_KEY}
+            MG_SIG_MASTER_KEY=$ENV{MG_SIG_MASTER_KEY}
+            MG_SIG_HASH_KEY=$ENV{MG_SIG_HASH_KEY}
+            MG_KBIT_MASTER_KEY=$ENV{MG_KBIT_MASTER_KEY}
+            MG_KBIT_IV=$ENV{MG_KBIT_IV}
+            MG_KC_MASTER_KEY=$ENV{MG_KC_MASTER_KEY}
+            MG_KC_IV=$ENV{MG_KC_IV}
+            MG_ROOTSIG_MASTER_KEY=$ENV{MG_ROOTSIG_MASTER_KEY}
+            MG_ROOTSIG_HASH_KEY=$ENV{MG_ROOTSIG_HASH_KEY}
+            MG_CONTENT_TABLE_IV=$ENV{MG_CONTENT_TABLE_IV}
+            MG_CONTENT_IV=$ENV{MG_CONTENT_IV}
             ${PYTHON3} "${CMAKE_SOURCE_DIR}/utils/scripts/kelfsign.py" mbr "${CMAKE_CURRENT_BINARY_DIR}/osdmbr.bin" "${CMAKE_CURRENT_BINARY_DIR}/OSDMBR.XLF"
         COMMENT "Creating KELF file"
     )

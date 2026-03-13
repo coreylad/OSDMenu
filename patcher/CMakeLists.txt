@@ -224,13 +224,21 @@ set_target_properties(${patcher_target} PROPERTIES
     OUTPUT_NAME "${patcher_target}"
 )
 
-# Build OSDMenu KELF if environment variables are set
-if(NOT PATCHER_HOSD AND DEFINED ENV{KELFSERVER_API_ADDRESS} AND DEFINED ENV{KELFSERVER_API_KEY})
+# Build OSDMenu KELF if MG key environment variables are set or PS2KEYS.dat exists
+if(NOT PATCHER_HOSD AND (DEFINED ENV{MG_SIG_MASTER_KEY} OR EXISTS "${CMAKE_SOURCE_DIR}/utils/scripts/PS2KEYS.dat"))
     add_custom_command(
         TARGET ${patcher_target} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E env
-            KELFSERVER_API_ADDRESS=$ENV{KELFSERVER_API_ADDRESS}
-            KELFSERVER_API_KEY=$ENV{KELFSERVER_API_KEY}
+            MG_SIG_MASTER_KEY=$ENV{MG_SIG_MASTER_KEY}
+            MG_SIG_HASH_KEY=$ENV{MG_SIG_HASH_KEY}
+            MG_KBIT_MASTER_KEY=$ENV{MG_KBIT_MASTER_KEY}
+            MG_KBIT_IV=$ENV{MG_KBIT_IV}
+            MG_KC_MASTER_KEY=$ENV{MG_KC_MASTER_KEY}
+            MG_KC_IV=$ENV{MG_KC_IV}
+            MG_ROOTSIG_MASTER_KEY=$ENV{MG_ROOTSIG_MASTER_KEY}
+            MG_ROOTSIG_HASH_KEY=$ENV{MG_ROOTSIG_HASH_KEY}
+            MG_CONTENT_TABLE_IV=$ENV{MG_CONTENT_TABLE_IV}
+            MG_CONTENT_IV=$ENV{MG_CONTENT_IV}
             ${PYTHON3} "${CMAKE_SOURCE_DIR}/utils/scripts/kelfsign.py" "${PATCHER_KELF_TYPE}" "${PATCHER_BINARY_DIR}/${patcher_target}.elf" "${PATCHER_BINARY_DIR}/OSDMENU.XLF"
         COMMENT "Creating KELF file"
     )

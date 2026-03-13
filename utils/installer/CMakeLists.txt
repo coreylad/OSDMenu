@@ -29,8 +29,8 @@ bin2c_source("${CMAKE_CURRENT_SOURCE_DIR}/config/osdmbr.cnf" osdmbrcnf_source "o
 get_target_property(mbr_binary_dir osdmbr BINARY_DIR)
 set(osdmbr_kelf_file "${mbr_binary_dir}/OSDMBR.XLF")
 
-# KELF environment variables should be set if this subdirectory is included
-if(DEFINED ENV{KELFSERVER_API_ADDRESS} AND DEFINED ENV{KELFSERVER_API_KEY})
+# MG key environment variables must be set or PS2KEYS.dat must exist for the installer
+if(DEFINED ENV{MG_SIG_MASTER_KEY} OR EXISTS "${CMAKE_SOURCE_DIR}/utils/scripts/PS2KEYS.dat")
     # KELF will be built, depend on osdmbr target
     add_custom_command(
         OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/payload_bin.c"
@@ -39,7 +39,7 @@ if(DEFINED ENV{KELFSERVER_API_ADDRESS} AND DEFINED ENV{KELFSERVER_API_KEY})
         COMMENT "Converting OSDMBR.XLF to payload_bin"
     )
 else()
-    message(FATAL_ERROR "KELF environment variables are not set. The installer requires OSDMBR.XLF, created only when KELF signing is enabled.")
+    message(FATAL_ERROR "MG key environment variables are not set and utils/scripts/PS2KEYS.dat was not found. The installer requires OSDMBR.XLF, created only when KELF signing is enabled.")
 endif()
 
 add_executable(osdmbr-installer_unc ${SOURCES} ${IRX_SOURCES} ${ps2hdd_source} ${osdmbrcnf_source})
